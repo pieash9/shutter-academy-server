@@ -47,6 +47,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     const classCollection = client.db("shutterAcademyDb").collection("classes");
+    const userCollection = client.db("shutterAcademyDb").collection("users");
 
     //generate JWT token
     app.post("/jwt", async (req, res) => {
@@ -57,18 +58,37 @@ async function run() {
       res.send({ token });
     });
 
-
+    //?user
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+    // get data from user role instructor
+    app.get("/instructors", async (req, res) => {
+      const filter = { role: { $eq: "instructor" } };
+      const result = await userCollection.find(filter).toArray();
+      res.send(result);
+    });
 
     //? class create
-    app.post("/classes",verifyJWT, async (req, res) => {
+    app.post("/classes", verifyJWT, async (req, res) => {
       const newClass = req.body;
       const result = await classCollection.insertOne(newClass);
       res.send(result);
     });
 
-    // class get all
+    //get all class
     app.get("/classes", async (req, res) => {
       const result = await classCollection.find().toArray();
+      res.send(result);
+    });
+
+    //get class for a instructor
+    app.get("/instructorClasses/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { instructorEmail: email };
+      const result = await classCollection.find(filter).toArray();
       res.send(result);
     });
 
