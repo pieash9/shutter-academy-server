@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -118,6 +118,14 @@ async function run() {
       const email = req.params.email;
       const query = { "studentInfo.email": email };
       const result = await selectedClassCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    //delete selected class for a student
+    app.delete("/selectedClasses/:id",verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassCollection.deleteOne(query)
       res.send(result);
     });
 
