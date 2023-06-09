@@ -48,6 +48,9 @@ async function run() {
     // await client.connect();
     const classCollection = client.db("shutterAcademyDb").collection("classes");
     const userCollection = client.db("shutterAcademyDb").collection("users");
+    const selectedClassCollection = client
+      .db("shutterAcademyDb")
+      .collection("selectedClasses");
 
     //generate JWT token
     app.post("/jwt", async (req, res) => {
@@ -59,9 +62,15 @@ async function run() {
     });
 
     //?user
-    app.post("/users", async (req, res) => {
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
       const user = req.body;
-      const result = await userCollection.insertOne(user);
+      const query = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await userCollection.updateOne(query, updateDoc, options);
       res.send(result);
     });
     // get data from user role instructor
@@ -83,12 +92,32 @@ async function run() {
       const result = await classCollection.find().toArray();
       res.send(result);
     });
+    //get all approved class
+    app.get("/approvedClasses", async (req, res) => {
+      const filter = { status: { $eq: "approved" } };
+      const result = await classCollection.find(filter).toArray();
+      res.send(result);
+    });
 
     //get class for a instructor
-    app.get("/instructorClasses/:email", async (req, res) => {
+    app.get("/instructorClasses/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const filter = { instructorEmail: email };
       const result = await classCollection.find(filter).toArray();
+      res.send(result);
+    });
+
+    //? Selected classes
+    app.post("/selectedClasses", verifyJWT, async (req, res) => {
+      const selectedClass = req.body;
+      const result = await selectedClassCollection.insertOne(selectedClass);
+      res.send(result);
+    });
+    // get selected classes for a student
+    app.get("/selectedClasses/:email",verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { "studentInfo.email": email };
+      const result = await selectedClassCollection.find(query).toArray();
       res.send(result);
     });
 
