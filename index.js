@@ -50,7 +50,9 @@ async function run() {
     // await client.connect();
     const classCollection = client.db("shutterAcademyDb").collection("classes");
     const userCollection = client.db("shutterAcademyDb").collection("users");
-    const paymentCollection = client.db("shutterAcademyDb").collection("payments");
+    const paymentCollection = client
+      .db("shutterAcademyDb")
+      .collection("payments");
     const selectedClassCollection = client
       .db("shutterAcademyDb")
       .collection("selectedClasses");
@@ -78,6 +80,13 @@ async function run() {
         expiresIn: "1d",
       });
       res.send({ token });
+    });
+
+    //?payment
+    app.post("/payment", verifyJWT, async (req, res) => {
+      const paymentInfo = req.body;
+      const result = await paymentCollection.insertOne(paymentInfo);
+      res.send(result);
     });
 
     //?user
@@ -144,7 +153,7 @@ async function run() {
     app.get("/selectedAClasses/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await selectedClassCollection.findOne(query)
+      const result = await selectedClassCollection.findOne(query);
       res.send(result);
     });
 
