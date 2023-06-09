@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -48,9 +50,26 @@ async function run() {
     // await client.connect();
     const classCollection = client.db("shutterAcademyDb").collection("classes");
     const userCollection = client.db("shutterAcademyDb").collection("users");
+    const paymentCollection = client.db("shutterAcademyDb").collection("payments");
     const selectedClassCollection = client
       .db("shutterAcademyDb")
       .collection("selectedClasses");
+
+    //generate client secret
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      if (price) {
+        const amount = parseFloat(price) * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      }
+    });
 
     //generate JWT token
     app.post("/jwt", async (req, res) => {
@@ -114,18 +133,26 @@ async function run() {
       res.send(result);
     });
     // get selected classes for a student
-    app.get("/selectedClasses/:email",verifyJWT, async (req, res) => {
+    app.get("/selectedClasses/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { "studentInfo.email": email };
       const result = await selectedClassCollection.find(query).toArray();
       res.send(result);
     });
 
-    //delete selected class for a student
-    app.delete("/selectedClasses/:id",verifyJWT, async (req, res) => {
+    // get a selected classes for a student by id
+    app.get("/selectedAClasses/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await selectedClassCollection.deleteOne(query)
+      const result = await selectedClassCollection.findOne(query)
+      res.send(result);
+    });
+
+    //delete selected class for a student
+    app.delete("/selectedClasses/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassCollection.deleteOne(query);
       res.send(result);
     });
 
