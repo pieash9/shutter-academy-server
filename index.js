@@ -89,6 +89,17 @@ async function run() {
       res.send(result);
     });
 
+    //get payment complete(enrolled) classes for a user
+    app.get("/payment/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const query = { "studentInfo.email": email };
+      const result = await paymentCollection
+        .find(query)
+        .sort({ date: -1 })
+        .toArray();
+      res.send(result);
+    });
+
     //?user
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
