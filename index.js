@@ -146,6 +146,21 @@ async function run() {
       res.send(result);
     });
 
+    //update a class
+    app.patch("/updateClass/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const classData = req.body;
+
+      const updateDoc = {
+        $set: {
+          ...classData,
+        },
+      };
+      const result = await classCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
     //get all class
     app.get("/classes", async (req, res) => {
       const result = await classCollection.find().toArray();
