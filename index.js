@@ -119,10 +119,30 @@ async function run() {
       res.send(result);
     });
 
-    //? class create
+    //? class create by instructor
     app.post("/classes", verifyJWT, async (req, res) => {
       const newClass = req.body;
       const result = await classCollection.insertOne(newClass);
+      res.send(result);
+    });
+
+    // class manage class seat when student get enrolled
+    app.patch("/classes/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+
+      // Query the document to retrieve the current value of availableSeats
+      const classData = await classCollection.findOne(query);
+      const availableSeats = classData.availableSeats;
+      const totalEnrolled = classData.totalEnrolled;
+
+      const updateDoc = {
+        $set: {
+          availableSeats: parseInt(availableSeats) - 1,
+          totalEnrolled: parseInt(totalEnrolled) + 1,
+        },
+      };
+      const result = await classCollection.updateOne(query, updateDoc);
       res.send(result);
     });
 
