@@ -133,7 +133,7 @@ async function run() {
     });
 
     //get user role
-    app.get("/getUserRole/:email", verifyJWT, async (req, res) => {
+    app.get("/getUserRole/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await userCollection.findOne(query);
