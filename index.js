@@ -126,7 +126,7 @@ async function run() {
       res.send(result);
     });
 
-    // class manage class seat when student get enrolled
+    // manage class seat when student get enrolled
     app.patch("/classes/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -143,6 +143,36 @@ async function run() {
         },
       };
       const result = await classCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    //manage class status by admin
+    app.patch("/updateClassStatus/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const { status } = req.body;
+      const updateDoc = {
+        $set: {
+          status: status,
+        },
+      };
+      const result = await classCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    //class feedback add  by admin
+    app.put("/classFeedback/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const { feedback } = req.body;
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          feedback: feedback,
+        },
+      };
+      const result = await classCollection.updateOne(query, updateDoc, options);
       res.send(result);
     });
 
